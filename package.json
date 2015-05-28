@@ -26,5 +26,17 @@
     "main-bower-files": "^2.8.0",
     "merge-stream": "^0.1.7",
     "merge2": "^0.3.5"
-  }
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/parsnick/laravel-elixir-bowerbundle.git"
+  },
+  "bugs": {
+    "url": "https://github.com/parsnick/laravel-elixir-bowerbundle/issues"
+  },
+  "homepage": "https://github.com/parsnick/laravel-elixir-bowerbundle#readme"
 }
