@@ -33,8 +33,6 @@ elixir.extend('bowerBundle', function (bundleName, packages, jsOutputDir, cssOut
 {
     bowerPath = __dirname + '/../../' + config.bowerDir;
 
-    console.log(bowerPath);
-
     var bundleConfig = {
         name: bundleName,
         includes: packages,
