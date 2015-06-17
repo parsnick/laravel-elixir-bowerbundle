@@ -89,27 +89,27 @@ elixir.extend('bowerBundle', function (bundleName, packages, outputDir) {
             return gulp.src(bundle.files(bower.config.directory))
 
                 .pipe(cssFilter)
-                    .pipe(rework(reworkUrl(function (url) {
-                        return isRelative(url) ? path.basename(url) : url;
-                    })))
-                    .pipe(sourcemaps.init({ loadMaps: true }))
-                    .pipe(concat(bundle.name + '.css'))
-                    .pipe(minifyCss())
-                    .pipe(sourcemaps.write('.'))
-                    .pipe(gulp.dest(bundle.outputDir))
+                .pipe(rework(reworkUrl(function (url) {
+                    return isRelative(url) ? path.basename(url) : url;
+                })))
+                .pipe(sourcemaps.init({ loadMaps: true }))
+                .pipe(concat(bundle.name + '.css'))
+                .pipe(minifyCss())
+                .pipe(sourcemaps.write('.'))
+                .pipe(gulp.dest(bundle.outputDir))
                 .pipe(cssFilter.restore())
 
                 .pipe(jsFilter)
-                    .pipe(sourcemaps.init({ loadMaps: true }))
-                    .pipe(concat(bundle.name + '.js'))
-                    .pipe(uglifyJs())
-                    .pipe(sourcemaps.write('.'))
-                    .pipe(gulp.dest(bundle.outputDir))
+                .pipe(sourcemaps.init({ loadMaps: true }))
+                .pipe(concat(bundle.name + '.js'))
+                .pipe(uglifyJs())
+                .pipe(sourcemaps.write('.'))
+                .pipe(gulp.dest(bundle.outputDir))
                 .pipe(jsFilter.restore())
 
                 .pipe(otherFilter)
-                    .pipe(gulp.dest(bundle.outputDir))
-                ;
+                .pipe(gulp.dest(bundle.outputDir))
+            ;
         });
 
         return merge.apply(this, streams);
@@ -184,13 +184,36 @@ function installPackages(packages)
 function logBundleBreakdown()
 {
     bundleManager.bundles.forEach(function (bundle) {
+
+        var packageNames = _.pluck(bundle.packages, 'name');
+
         gutil.log(
             'Bundling '
-            + gutil.colors.cyan.apply(gutil.colors, _.pluck(bundle.packages, 'name'))
+            + gutil.colors.cyan.apply(gutil.colors, packageNames)
             + ' into '
             + gutil.colors.magenta(bundle.name + '.css')
             + ' and '
             + gutil.colors.magenta(bundle.name + '.js')
         );
+
+        bundle.packages.forEach(function (package) {
+            package.loadBowerJson();
+
+            var missingDependencies = _.difference(Object.keys(
+                package.dependencies
+            ), packageNames);
+
+            if (missingDependencies.length) {
+                gutil.log(
+                    '  ! '
+                    + gutil.colors.cyan(package.name)
+                    + ' depends on '
+                    + gutil.colors.cyan.apply(gutil.colors, missingDependencies)
+                    + ', which is not included in '
+                    + gutil.colors.magenta(bundle.name)
+                    + ' bundle'
+                );
+            }
+        });
     });
 }
