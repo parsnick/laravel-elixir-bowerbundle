@@ -1,5 +1,6 @@
 
-![](https://david-dm.org/parsnick/laravel-elixir-bowerbundle.svg)
+![Dependencies Status](https://david-dm.org/parsnick/laravel-elixir-bowerbundle.svg)
+[![Build Status](https://travis-ci.org/parsnick/laravel-elixir-bowerbundle.svg?branch=master)](https://travis-ci.org/parsnick/laravel-elixir-bowerbundle)
 
 # laravel-elixir-bowerbundle
 
