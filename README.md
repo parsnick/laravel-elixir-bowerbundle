@@ -1,4 +1,8 @@
+
+![](https://david-dm.org/parsnick/laravel-elixir-bowerbundle.svg)
+
 # laravel-elixir-bowerbundle
+
 Concatenates [Bower](https://bower.io) dependencies into configurable bundles of .css and .js files.
 This is a plugin for [Laravel's Elixir](https://github.com/laravel/elixir) build tool and provides the `bowerBundle()` method.
 
