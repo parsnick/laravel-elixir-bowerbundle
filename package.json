@@ -29,6 +29,7 @@
     "rework-plugin-url": "^1.0.1"
   },
   "devDependencies": {
+    "gulp": "*",
     "better-console": "^0.2.4",
     "gulp-jasmine": "^2.0.1",
     "gulp-util": "^3.0.4"
