@@ -39,7 +39,7 @@ To satisfy the following requirements:*
 
 #### Create bundles in a different output directory
 
-Bundles are created in `public/bundles` by default, as set on the elixir config object:
+Bundles are created in `public/bundles` by default, as per the setting on elixir's config object:
 ```js
 elixir.config.bowerOutput = 'public/bundles'
 ```
@@ -58,6 +58,7 @@ Since this plugin uses Bower's programmatic API, you don't need to do anything s
 ```
 
 #### Use bower.json for your bundle definitions
+
 If you want to keep your dependencies separate from your build script, use the "bundles" property in your project's root `bower.json`:
 ```json
 {
@@ -80,6 +81,7 @@ And in your elixir recipe:
 ```
 
 #### Specify which files you want from a package
+
 The files to include from each package are determined by the package's "main" property. If needed, you can override this.
 
 Example: the bootstrap bower package lists `bootstrap.less` as one of its main files. To get the compiled CSS instead, use an "overrides" property in your project's root `bower.json`.
@@ -97,10 +99,33 @@ Example: the bootstrap bower package lists `bootstrap.less` as one of its main f
 }
 ```
 
-## Alternatives
-The [laravel-elixir-bower](https://github.com/Crinsane/laravel-elixir-bower) plugin may be a better choice if you have only a few dependencies in bower, and/or you want a single all-in-one bundle of vendor.css and vendor.js
+## Notes
 
-> use bowerBundle api
+#### Dependency warnings in gulp log
 
-Or you might prefer to use [bower-main](https://github.com/frodefi/bower-main) and [main-bower-files](https://github.com/ck86/main-bower-files)
-directly in your own custom tasks.
+If a package has dependencies which are **not** also included in the bundle, you'll see a message in the format:
+
+> ! *package* depends on *another package*, which is not included in *bundle* bundle
+
+Don't worry, it's a purely informative message just to remind you to load the dependency somewhere, somehow.
+
+
+#### Need to change the build process?
+
+Pick and choose parts of this package to use in your own custom gulp tasks. Take a look at the source for inspiration, or as a quick example:
+```js
+var gulp = require('gulp');
+var bundle = require('laravel-elixir-bowerbundle/src/Bundle').factory;
+var bowerDir = 'bower_components';
+
+gulp.task('bundles', function () {
+  return gulp.src(
+    bundle('libs', ['jquery', 'lodash']).files(bowerDir)
+  )
+  .pipe() // ...
+});
+```
+
+If you do need to roll your own, you might not need this plugin. See also: [bower-main](https://github.com/frodefi/bower-main) and [main-bower-files](https://github.com/ck86/main-bower-files)
+
+Finally, the [laravel-elixir-bower](https://github.com/Crinsane/laravel-elixir-bower) plugin is a better choice if you have just a few dependencies in bower, and/or you want a single all-in-one bundle of vendor.css and vendor.js.
