@@ -1,202 +1,196 @@
 /**
- * Combines vendor scripts and styles into single .js and .css bundles.
+ * BowerBundle extension for Laravel's Elixir
  *
- * Scripts and styles come from vendor/bower_components, and depend on the "main"
- * property in each package's bower.json.
- * This can be overridden using the "overrides" property in our bower.json in the
- * project root.
+ * @license MIT
  */
-
 var gulp = require('gulp');
 var elixir = require('laravel-elixir');
 var config = elixir.config;
-var bowerMain = require('bower-main'); // this plugin only gets a certain file extension and separates out the result to { normal, minified, minifiedNotFound }
-var mainBowerFiles = require('main-bower-files'); // this plugin finds all the... well, main bower files and returns array
-var concat = require('gulp-concat');
-var uglify = require('gulp-uglify');
-var minify = require('gulp-minify-css');
 var gutil = require('gulp-util');
-var gulpif = require('gulp-if');
+var filter = require('gulp-filter');
+var concat = require('gulp-concat');
+var rework = require('gulp-rework');
+var reworkUrl = require('rework-plugin-url');
 var sourcemaps = require('gulp-sourcemaps');
-var frep = require('gulp-frep');
-var merge2 = require('merge2');
-var merge = require('merge-stream');
+var minifyCss = require('gulp-minify-css');
+var uglifyJs = require('gulp-uglify');
+var bower = require('bower');
+var inquirer = require('inquirer');
+var Promise = require('promise');
+var _ = require('lodash');
+var fs = require('fs');
 var path = require('path');
+var merge = require('merge-stream');
 
-var bowerPath;
+var BundleManager = require('./src/BundleManager');
+var bundleManager = new BundleManager();
 
-elixir.bowerBundles = [];
-config.bowerDir     = config.bowerDir || 'vendor/bower_components';
-config.bowerOutput  = config.bowerOutput || 'public/bundles';
+config.bowerOutput = 'public/bundles';
 
-elixir.extend('bowerBundle', function (bundleName, packages, jsOutputDir, cssOutputDir)
-{
-    bowerPath = __dirname + '/../../' + config.bowerDir;
+elixir.extend('bowerBundle', function (bundleName, packages, outputDir) {
 
-    var bundleConfig = {
-        name: bundleName,
-        includes: packages,
-        output: {
-            js:  jsOutputDir  || config.bowerOutput,
-            css: cssOutputDir || config.bowerOutput
+    // .bowerBundle()
+    if (arguments.length === 0) {
+        bundleManager.addAll(config.bowerOutput);
+    }
+
+    // .bowerBundle(bundleName)
+    if (arguments.length === 1) {
+        bundleManager.addNamed(bundleName, config.bowerOutput);
+    }
+
+    if (arguments.length >= 2) {
+
+        // .bowerBundle(bundleName, outputDir)
+        if (typeof packages === 'string') {
+            bundleManager.addNamed(bundleName, packages)
         }
-    };
+        // .bowerBundle(bundleName, ['jquery', 'angular'])
+        // .bowerBundle(bundleName, ['jquery', 'angular'], outputDir)
+        else {
+            bundleManager.add(bundleName, packages, outputDir || config.bowerOutput)
+        }
+    }
 
-    elixir.bowerBundles.push(bundleConfig);
-
-    // Call the individual subtasks
     gulp.task('bowerBundle', [
-        'bowerBundle:info',
-        'bowerBundle:css',
-        'bowerBundle:js',
-        'bowerBundle:misc'
+        'bowerBundle:check',
+        'bowerBundle:run'
     ]);
 
-    // Print out the bundle config
-    gulp.task('bowerBundle:info', function ()
+    gulp.task('bowerBundle:check', function (cb)
     {
-        elixir.bowerBundles.forEach(function (bundle)
-        {
-            gutil.log(
-                'Bundling ' +
-                bundle.includes.map(function (packageName) {
-                    return gutil.colors.cyan(packageName);
-                }).join(', ') +
-                ' into ' +
-                gutil.colors.magenta(bundle.name + '.css') +
-                ' and ' +
-                gutil.colors.magenta(bundle.name + '.js')
-            );
-        });
+        if ( ! bundleManager.bundles.length) return gutil.log('bowerBundle has nothing to do');
+
+        var required = getRequiredPackages();
+
+        getInstalledPackages()
+            .then(function (packageList) {
+                return _(required).pluck('name').difference(packageList).value();
+            })
+            .then(function (packagesToInstall) {
+                if (packagesToInstall.length) {
+                    return installPackages(packagesToInstall);
+                }
+            })
+            .then(function () {
+                logBundleBreakdown();
+            })
+            .then(cb);
     });
 
-    // Bundle up the CSS
-    gulp.task('bowerBundle:css', function ()
+    gulp.task('bowerBundle:run', ['bowerBundle:check'], function ()
     {
-        var bundleStreams = elixir.bowerBundles.map(function (bundle)
-        {
-            return getBowerStream('css', minify, bundle.includes)
-                .pipe(concat(bundle.name + '.css'))
-                .pipe(gulpif(!config.production, sourcemaps.write()))
-                .pipe(gulp.dest(bundle.output.css));
+        var streams = bundleManager.bundles.map(function (bundle) {
+
+            var cssFilter   = filter('*.css');
+            var jsFilter    = filter('*.js');
+            var otherFilter = filter(['*', '!*.css', '!*.js']);
+
+            return gulp.src(bundle.files(bower.config.directory))
+
+                .pipe(cssFilter)
+                    .pipe(rework(reworkUrl(function (url) {
+                        return isRelative(url) ? path.basename(url) : url;
+                    })))
+                    .pipe(sourcemaps.init({ loadMaps: true }))
+                    .pipe(concat(bundle.name + '.css'))
+                    .pipe(minifyCss())
+                    .pipe(sourcemaps.write('.'))
+                    .pipe(gulp.dest(bundle.outputDir))
+                .pipe(cssFilter.restore())
+
+                .pipe(jsFilter)
+                    .pipe(sourcemaps.init({ loadMaps: true }))
+                    .pipe(concat(bundle.name + '.js'))
+                    .pipe(uglifyJs())
+                    .pipe(sourcemaps.write('.'))
+                    .pipe(gulp.dest(bundle.outputDir))
+                .pipe(jsFilter.restore())
+
+                .pipe(otherFilter)
+                    .pipe(gulp.dest(bundle.outputDir))
+                ;
         });
 
-        return merge.apply(this, bundleStreams);
+        return merge.apply(this, streams);
     });
-
-    // Bundle up the javascript
-    gulp.task('bowerBundle:js', function ()
-    {
-        var bundleStreams = elixir.bowerBundles.map(function (bundle)
-        {
-            return getBowerStream('js', uglify, bundle.includes)
-                .pipe(concat(bundle.name + '.js'))
-                .pipe(gulpif(!config.production, sourcemaps.write()))
-                .pipe(gulp.dest(bundle.output.js));
-        });
-
-        return merge.apply(this, bundleStreams);
-    });
-
-    // Copy across any images, etc.
-    gulp.task('bowerBundle:misc', function ()
-    {
-        var bundleStreams = elixir.bowerBundles.map(function (bundle)
-        {
-            return gulp.src(filterByPackage(mainBowerFiles('**/*.!(css|js)'), bundle.includes))
-                .pipe(gulp.dest(config.bowerOutput));
-        });
-
-        return merge.apply(this, bundleStreams);
-    });
-
-    // Watch bower config for changes
-    var toWatch = ['bower.json', 'gulpfile.js'];
-    this.registerWatcher('bowerBundle:css', toWatch);
-    this.registerWatcher('bowerBundle:js', toWatch);
-    this.registerWatcher('bowerBundle:misc', toWatch);
 
     return this.queueTask('bowerBundle');
 });
 
 /**
- * Get the package name from a file path.
- *
- * @param {string} filePath
- * @returns {string}
+ * Check if the given path is relative, not absolute.
+ * @param  {string}  str
+ * @return {Boolean}
  */
-function getPackageFromPath(filePath)
+function isRelative(str)
 {
-    return path.relative(bowerPath, filePath).split('/').shift();
+    return ! /^(https?:)?\/\//.test(str);
 }
 
-
 /**
- * Given an array of all files, returns only those from the named packages.
- *
- * @param {array} files
- * @param {array} packages
- * @return {array}
+ * Get the list of currently installed packages from Bower's API.
+ * @return {Promise}
  */
-function filterByPackage(files, packages)
+function getInstalledPackages()
 {
-    if ( ! packages) return files;
-
-    return files.filter(function (file) {
-        return packages.indexOf(getPackageFromPath(file)) > -1;
+    return new Promise(function (resolve, reject) {
+        bower.commands.list().on('end', function (list) {
+            resolve(Object.keys(list.pkgMeta.dependencies));
+        });
     });
 }
 
 /**
- * Get the main bower files from the given packages, including minified versions (returned separately).
- *
- * @param {string} ext
- * @param {array|undefined} packages
- * @returns {*}
+ * Get a flattened array of required packages for all bundles combined.
+ * @return {array}
  */
-function getMainFiles(ext, packages)
+function getRequiredPackages()
 {
-    var main = bowerMain(ext, 'min.' + ext);
-
-    return {
-        normal: filterByPackage(main.normal, packages),
-        minified: filterByPackage(main.minified, packages),
-        minifiedNotFound: filterByPackage(main.minifiedNotFound, packages)
-    };
+    return _(bundleManager.bundles)
+        .pluck('packages')
+        .flatten()
+        .value();
 }
 
 /**
- * Get stream of bower component files.
- *
- * If production flag is not set, uses full uncompressed source.
- * If production flag is set, uses vendor minified source where exists,
- * otherwise minifies the full source using the provided minifier.
- *
- * @param {string} ext
- * @param {*} minifier
- * @param {array|undefined} packages
- * @returns {*}
+ * Install the named packages with Bower programmatic API
+ * @param  {array}   packages
+ * @return {Promise}
  */
-function getBowerStream(ext, minifier, packages)
+function installPackages(packages)
 {
-    var bowerFiles = getMainFiles(ext, packages || []);
+    gutil.log(
+        'Packages missing, now installing '
+        + packages.map(function (package) {
+            return gutil.colors.cyan(package);
+        }).join(', ')
+    );
 
-    var stream = gulp.src(bowerFiles.normal);
+    return new Promise(function (resolve, reject) {
+        bower.commands
+            .install(packages, {}, { interactive: true })
+            .on('prompt', function (prompts, callback) {
+                inquirer.prompt(prompts, callback);
+            })
+            .on('end', resolve);
+    });
+}
 
-    if (config.production)
-    {
-        stream = merge2(
-            gulp.src(bowerFiles.minified)
-                .pipe(frep({ '//# sourceMappingURL=': '//' })), // remove maps from vendor provided minified versions (not published so causes 404s)
-            gulp.src(bowerFiles.minifiedNotFound)
-                .pipe(concat('tmp.min.' + ext))
-                .pipe(minifier())
+/**
+ * Logs the currently configured breakdown of bundles and their components
+ * @return {void}
+ */
+function logBundleBreakdown()
+{
+    bundleManager.bundles.forEach(function (bundle) {
+        gutil.log(
+            'Bundling '
+            + gutil.colors.cyan.apply(gutil.colors, _.pluck(bundle.packages, 'name'))
+            + ' into '
+            + gutil.colors.magenta(bundle.name + '.css')
+            + ' and '
+            + gutil.colors.magenta(bundle.name + '.js')
         );
-    }
-    else
-    {
-        stream.pipe(sourcemaps.init())
-    }
-
-    return stream;
+    });
 }
