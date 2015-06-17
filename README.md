@@ -1,79 +1,106 @@
 # laravel-elixir-bowerbundle
-Concatenates [bower](https://bower.io) dependencies into configurable bundles of .css and .js files.
+Concatenates [Bower](https://bower.io) dependencies into configurable bundles of .css and .js files.
 This is a plugin for [Laravel's Elixir](https://github.com/laravel/elixir) build tool and provides the `bowerBundle()` method.
 
-## Example
-```js
-elixir(function(mix) {
-  mix
-    .bowerBundle('frontend', [
-      'jquery',
-      'lodash'
-    ])
-    .bowerBundle('mapping', ['leaflet'])
-    .bowerBundle('admin', [
-      'angular'
-      'd3'
-    ])
-});
-```
-produces...
-```sh
-public/bundles/frontend.js # jquery and lodash libraries concatenated
+#### Why another plugin?
+To satisfy the following requirements:*
 
-public/bundles/mapping.js       # leaflet js
-public/bundles/mapping.css      # leaflet css
-public/bundles/layers.png, ...  # any other assets in leaflet package's "main" property
+1. create **multiple bundles**, each consisting of any number of Bower packages
+2. **no further build steps required** - fonts, images, etc. copied across to the bundle directory automatically
+3. CSS and JS concatenated **in the order defined**
+4. **no silent failure** if a package is not installed
+5. **minimal configuration**, no more than specifying which packages to include
+6. **no redundancy** with the existing bower.json "dependencies" property
+7. **minification** of CSS and JS and **external sourcemaps**
 
-public/bundles/admin.js  # angular and d3 scripts concatenated
-public/bundles/admin.css # angular and d3 styles concatenated
-```
+
+<small>* if these are in fact easily achieved with an existing solution, please drop me a line!</small>
 
 ## Usage
-1. Grab the module from npm 
+1. Grab the module from npm
   ```sh
   npm install laravel-elixir-bowerbundle --save
   ```
-  
-2. Load the module in your gulpfile.js 
+
+2. Load the module in your gulpfile.js
   ```js
   require('laravel-elixir-bowerbundle');
   ```
-  
+
 3. Configure your bundles
   ```js
   elixir(function(mix) {
-    mix.bowerBundle('frontend', ['jquery', 'lodash'])
+    mix
+      // Create a frontend.js file containing jquery and lodash libraries
+      .bowerBundle('frontend', ['jquery', 'lodash'])
+      // ...
   });
-  ``` 
-  
-Caveat: Bower packages must be installed *and* listed as dependencies in your `bower.json` to be included in any bundle.
+  ```
 
-## Configuration
-This plugin adds two properties to the elixir config: 
+#### Create bundles in a different output directory
+
+Bundles are created in `public/bundles` by default, as set on the elixir config object:
 ```js
-elixir.config.bowerDir    = 'vendor/bower_components';
 elixir.config.bowerOutput = 'public/bundles'
 ```
-You can override these globally, or per-bundle with extra arguments to the `bowerBundle()` method.
-
-## API
+You can also override this per-bundle with an extra argument in your recipe:
 ```js
-/**
- * @param {string} bundleName   - used for naming the output file(s)
- * @param {array}  packages     - list of bower package names to include in this bundle
- * @param {string} jsOutputDir  - optional, defaults to value of elixir.config.bowerOutput
- * @param {string} cssOutputDir - optional, defaults to value of elixir.config.bowerOutput
- */
-.bowerBundle(bundleName, packages, jsOutputDir, cssOutputDir)
+mix.bowerBundle('libs', ['jquery', 'lodash'], 'public/vendor')`
 ```
 
-## bower.json
-Only want certain files from a bower package? Add an override to your bower.json - for more details, see [main-bower-files#overrides](https://github.com/ck86/main-bower-files#options)
+#### Use a custom directory for your bower_components
+
+Since this plugin uses Bower's programmatic API, you don't need to do anything special - just set your custom components directory in a [.bowerrc file](http://bower.io/docs/config/) as normal:
+```js
+{
+  "directory": "vendor/bower_components"
+}
+```
+
+#### Use bower.json for your bundle definitions
+If you want to keep your dependencies separate from your build script, use the "bundles" property in your project's root `bower.json`:
+```json
+{
+  "bundles": {
+    "frontend": [
+      "jquery",
+      "lodash"
+    ],
+    "admin": [
+      "datatables",
+      "d3"
+    ]
+  }
+}
+```
+And in your elixir recipe:
+```js
+  mix.bowerBundle();           // generates all bundles, or
+  mix.bowerBundle('frontend'); // generates the named bundle
+```
+
+#### Specify which files you want from a package
+The files to include from each package are determined by the package's "main" property. If needed, you can override this.
+
+Example: the bootstrap bower package lists `bootstrap.less` as one of its main files. To get the compiled CSS instead, use an "overrides" property in your project's root `bower.json`.
+
+```json
+{
+  "overrides": {
+    "bootstrap": {
+      "main": [
+        "dist/css/bootstrap.css",
+        "dist/js/bootstrap.js"
+      ]
+    }
+  }
+}
+```
 
 ## Alternatives
-The [laravel-elixir-bower](https://github.com/Crinsane/laravel-elixir-bower) plugin may be a better choice 
-if you have only a few dependencies in bower, and/or you want a single all-in-one bundle of vendor.css and vendor.js
+The [laravel-elixir-bower](https://github.com/Crinsane/laravel-elixir-bower) plugin may be a better choice if you have only a few dependencies in bower, and/or you want a single all-in-one bundle of vendor.css and vendor.js
 
-Or you might prefer to use [bower-main](https://github.com/frodefi/bower-main) and [main-bower-files](https://github.com/ck86/main-bower-files) 
+> use bowerBundle api
+
+Or you might prefer to use [bower-main](https://github.com/frodefi/bower-main) and [main-bower-files](https://github.com/ck86/main-bower-files)
 directly in your own custom tasks.
