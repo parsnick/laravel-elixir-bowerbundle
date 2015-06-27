@@ -105,7 +105,7 @@ module.exports = (function (undefined) {
     {
         return JSON.parse(
             fs.readFileSync(
-                path.join(bower.config.cwd, bower.config.directory, name, 'bower.json')
+                path.join(bower.config.cwd, bower.config.directory, name, '.bower.json')
             )
         );
     }
