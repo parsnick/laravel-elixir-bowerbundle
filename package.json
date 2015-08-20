@@ -1,6 +1,6 @@
 {
   "name": "laravel-elixir-bowerbundle",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Concatenates bower dependencies into configurable bundles of .css and .js files",
   "main": "index.js",
   "keywords": [

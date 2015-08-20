@@ -51,11 +51,12 @@ mix.bowerBundle('libs', ['jquery', 'lodash'], 'public/vendor')`
 
 #### Use a custom directory for your bower_components
 
-You'll need to update the `bowerDir` setting if you've configured bower to install its packages somewhere other than the default location:
+Since this plugin uses the processed config from the bower module, you don't need to do anything special - just set your custom components directory in a .bowerrc file as normal:
 ```js
-elixir.config.bowerDir = 'bower_components';
+{
+  "directory": "vendor/bower_components"
+}
 ```
-
 
 #### Use bower.json for your bundle definitions
 

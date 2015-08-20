@@ -15,6 +15,7 @@ var sourcemaps = require('gulp-sourcemaps');
 var minifyCss = require('gulp-minify-css');
 var uglifyJs = require('gulp-uglify');
 var Promise = require('promise');
+var bower = require('bower');
 var _ = require('lodash');
 var fs = require('fs');
 var path = require('path');
@@ -24,7 +25,6 @@ var BundleManager = require('./src/BundleManager');
 var bundleManager = new BundleManager();
 
 config.bowerOutput = 'public/bundles';
-config.bowerDir = config.bowerDir || 'bower_components';
 
 elixir.extend('bowerBundle', function (bundleName, packages, outputDir) {
 
@@ -121,7 +121,7 @@ elixir.extend('bowerBundle', function (bundleName, packages, outputDir) {
             var jsFilter    = filter('*.js');
             var otherFilter = filter(['*', '!*.css', '!*.js']);
 
-            return gulp.src(bundle.files(config.bowerDir))
+            return gulp.src(bundle.files(bower.config.directory))
 
                 .pipe(cssFilter)
                 .pipe(rework(reworkUrl(function (url) {
