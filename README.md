@@ -15,11 +15,7 @@ To satisfy the following requirements:*
 3. CSS and JS concatenated **in the order defined**
 4. **no silent failure** if a package is not installed
 5. **minimal configuration**, no more than specifying which packages to include
-6. **no redundancy** with the existing bower.json "dependencies" property
-7. **minification** of CSS and JS and **external sourcemaps**
-
-
-<small>* if these are in fact easily achieved with an existing solution, please drop me a line!</small>
+6. **minification** of CSS and JS and **external sourcemaps**
 
 ## Usage
 1. Grab the module from npm
@@ -46,7 +42,7 @@ To satisfy the following requirements:*
 
 Bundles are created in `public/bundles` by default, as per the setting on elixir's config object:
 ```js
-elixir.config.bowerOutput = 'public/bundles'
+elixir.config.bowerOutput = 'public/bundles';
 ```
 You can also override this per-bundle with an extra argument in your recipe:
 ```js
@@ -55,12 +51,11 @@ mix.bowerBundle('libs', ['jquery', 'lodash'], 'public/vendor')`
 
 #### Use a custom directory for your bower_components
 
-Since this plugin uses Bower's programmatic API, you don't need to do anything special - just set your custom components directory in a [.bowerrc file](http://bower.io/docs/config/) as normal:
+You'll need to update the `bowerDir` setting if you've configured bower to install its packages somewhere other than the default location:
 ```js
-{
-  "directory": "vendor/bower_components"
-}
+elixir.config.bowerDir = 'bower_components';
 ```
+
 
 #### Use bower.json for your bundle definitions
 
