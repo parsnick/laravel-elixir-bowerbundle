@@ -8,7 +8,7 @@
     "bower",
     "bundle",
     "elixir",
-    "gulp"
+    "gulpplugin"
   ],
   "author": "Nick <nick@parsnip.ninja>",
   "license": "MIT",

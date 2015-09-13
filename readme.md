@@ -25,13 +25,15 @@ This is a plugin for [Laravel's Elixir](https://github.com/laravel/elixir) build
     // and/or with a different name.
     mix.bower(['jquery', 'lodash'], 'public/vendor/all.js');
 
-    // Publish all the bundles as defined in your bower.json, e.g.
+    // Use bower.json to store your bundle compositions, e.g.
     // {
     //    "bundles": {
-    //      "admin": ["d3", "datatables"]
+    //      "vendor": ["jquery", "lodash"]
     //    }
     // }
+    // and call .bower() without arguments.
     mix.bower();
+
   });
   ```
 
