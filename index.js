@@ -168,6 +168,8 @@ function logMissingPackages(bundle)
     var missing = _(bundle.packages).reject('installed')
         .pluck('name').unique().value();
 
+    if ( ! missing.length) return;
+
     console.log('')
     console.log(
         colors.black.bgRed('!!! ' + bundle.name + ' is missing ' + colors.bold(missing.length) + ' package(s)')
