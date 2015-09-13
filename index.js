@@ -13,10 +13,10 @@ var $ = Elixir.Plugins;
 var config = Elixir.config;
 var Bundle = require('./src/Bundle');
 var Package = require('./src/Package');
-var BOWER_JSON = getBowerJson();
+var BOWER_JSON = readJsonIfExists('bower.json');
 
 config.bower = _.defaults(config.bower || {}, {
-    folder:       require('bower').config.directory,
+    folder:       readJsonIfExists('.bowerrc').directory || 'bower_components',
     outputFolder: 'bundles'
 });
 
@@ -125,14 +125,15 @@ var bundleMisc = function(paths) {
 };
 
 /**
- * Get the project's bower.json.
+ * Get contents of a .json file as an object.
  *
+ * @param  {string} path
  * @return {object}
  */
-function getBowerJson()
+function readJsonIfExists(path)
 {
     try {
-        return JSON.parse(fs.readFileSync('bower.json')) || {};
+        return JSON.parse(fs.readFileSync(path)) || {};
     } catch (error) { // suppress 'no such file' error
         return {};
     }

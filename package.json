@@ -13,7 +13,6 @@
   "author": "Nick <nick@parsnip.ninja>",
   "license": "MIT",
   "dependencies": {
-    "bower": "^1.5.2",
     "gulp-filter": "^3.0.1",
     "gulp-rework": "^1.0.3",
     "gulp-util": "^3.0.6",
@@ -24,11 +23,9 @@
   "devDependencies": {
     "gulp": "*",
     "better-console": "^0.2.4",
-    "gulp-jasmine": "^2.0.1",
-    "gulp-util": "^3.0.4"
+    "gulp-jasmine": "^2.0.1"
   },
   "peerDependencies": {
-    "bower": "*",
     "laravel-elixir": "^3.0.0"
   },
   "scripts": {
