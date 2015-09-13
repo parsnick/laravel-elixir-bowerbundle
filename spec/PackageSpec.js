@@ -5,14 +5,24 @@ var fs = require('fs');
 describe('Package', function () {
 
     beforeEach(function () {
+        Package.baseDir = 'vendor/bower_components';
         Package.configure({});
     });
 
-    it('uses a factory method to create package instances', function () {
-        expect(Package.factory('packageName')).toEqual(jasmine.any(Package));
+    it('returns path to package on filesystem', function () {
+        expect(new Package('test').path()).toBe('vendor/bower_components/test');
     });
 
-    it('reads its metadata from bower.json', function () {
+    it('returns an array of its main files as relative paths from bower_components directory', function () {
+
+        spyOn(fs, 'readFileSync').and.returnValue('{"main":"dist/main.js"}');
+
+        expect(new Package('test').files()).toEqual([
+            'test/dist/main.js'
+        ]);
+    });
+
+    it('reads its metadata from .bower.json', function () {
         var bowerJsonContent = {
             main: ["example.js"],
             dependencies: {
@@ -20,30 +30,12 @@ describe('Package', function () {
             }
         };
         spyOn(fs, 'readFileSync').and.returnValue(JSON.stringify(bowerJsonContent));
-        var myPackage = Package.factory('example');
 
-        myPackage.loadBowerJson();
+        var myPackage = new Package('example');
 
-        expect(fs.readFileSync).toHaveBeenCalled();
+        expect(fs.readFileSync).toHaveBeenCalledWith('vendor/bower_components/example/.bower.json');
         expect(myPackage.main).toEqual(bowerJsonContent.main);
         expect(myPackage.dependencies).toEqual(bowerJsonContent.dependencies);
-    });
-
-    it('accepts an override for its main files', function () {
-        var mainOverride = ['dist/test.js', 'dist/test.css'];
-        var myPackage = Package.factory('test', { main: mainOverride });
-
-        expect(myPackage.main).toEqual(mainOverride);
-    });
-
-    it('accepts an override for its dependencies', function () {
-        var depenciesOverride = {
-            angular: "*",
-            jquery: "~2.0"
-        };
-        var myPackage = Package.factory('test', { dependencies: depenciesOverride });
-
-        expect(myPackage.dependencies).toEqual(depenciesOverride);
     });
 
     it('can use a global overrides object, such as from the project root\s bower.json', function () {
@@ -53,20 +45,7 @@ describe('Package', function () {
             }
         });
 
-        expect(Package.factory('test').main).toBe('defined_by_root_config.js');
+        expect(new Package('test').main).toBe('defined_by_root_config.js');
     });
 
-    it('returns an array of its main files as relative paths from bower_components directory', function () {
-        Package.configure({
-            test: {
-                main: 'dist/main.js',
-                dependencies: ['my_dependency']
-            }
-        });
-        spyOn(fs, 'readFileSync').and.returnValue('{}');
-
-        expect(Package.factory('test').files()).toEqual([
-            'test/dist/main.js'
-        ]);
-    });
 });

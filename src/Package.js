@@ -1,24 +1,29 @@
 var fs = require('fs');
 var path = require('path');
-var bower = require('bower');
-var _ = require('lodash');
 
-module.exports = (function (undefined) {
+module.exports = (function () {
 
     var globalOverrides = {};
 
     /**
-     * Constructor for Packages
-     * @param {string} name         package name
-     * @param {array}  main         list of "main" files
-     * @param {array}  dependencies list of dependencies
+     * Constructor for Package
+     * @param {string} name
      */
-    function Package (name, main, dependencies)
+    function Package(name)
     {
+        var dotBowerJson = readBowerJson(name) || {};
+        var overrides = globalOverrides[name] || {};
+
         this.name         = name;
-        this.main         = main;
-        this.dependencies = dependencies;
+        this.installed    = !! dotBowerJson.name;
+        this.main         = overrides.main || dotBowerJson.main || [];
+        this.dependencies = overrides.dependencies || dotBowerJson.dependencies || [];
     };
+
+    /**
+     * @type {string} path to installed bower packages
+     */
+    Package.baseDir = 'bower_components';
 
     /**
      * Configure with a root overrides config, e.g. from bower.json.
@@ -37,34 +42,32 @@ module.exports = (function (undefined) {
      * }
      *
      * @param  {object} overrides
+     * @param  {string} baseDir
      * @return {void}
      */
-    Package.configure = function (overrides)
+    Package.configure = function (overrides, baseDir)
     {
         globalOverrides = overrides;
+        if (baseDir) Package.baseDir = baseDir;
     }
 
     /**
-     * Create a new Package instance
-     * @param  {string} name
-     * @param  {object} overrides
-     * @return {Package}
+     * Get the filesystem path to a package file or directory.
+     *
+     * @param {string} file
+     * @return {string}
      */
-    Package.factory = function (name, overrides)
+    Package.prototype.path = function (file)
     {
-        var overrides = overrides || globalOverrides[name] || {};
-
-        return new Package(name, overrides.main, overrides.dependencies);
+        return path.join(Package.baseDir, this.name, file || '.');
     };
 
     /**
-     * Get all files in this package relative to the bower_components directory.
+     * Get all files in this package.
      * @return {array}
      */
     Package.prototype.files = function()
     {
-        this.loadBowerJson();
-
         if (typeof this.main === 'string') {
             this.main = [this.main];
         }
@@ -74,39 +77,19 @@ module.exports = (function (undefined) {
         }, this);
     };
 
-    /**
-     * Load "main" and "dependencies" properties from the package's bower.json
-     * @return {void}
-     */
-    Package.prototype.loadBowerJson = function()
-    {
-        if (this.bowerJson === undefined) {
-            this.bowerJson = readBowerJson(this.name);
-        }
-
-        if (this.main === undefined) {
-            this.main = this.bowerJson.main || [];
-        }
-
-        if (this.dependencies === undefined) {
-            this.dependencies = this.bowerJson.dependencies || [];
-        }
-    };
-
     return Package;
 
     /**
      * Reads the bower.json config file for the named package.
      * @param  {string} name
      * @return {object} parsed JSON
-     * @throws {Error} If package is not installed
      */
-    function readBowerJson (name)
+    function readBowerJson(name)
     {
         try {
             return JSON.parse(
                 fs.readFileSync(
-                    path.join(bower.config.cwd, bower.config.directory, name, '.bower.json')
+                    path.join(Package.baseDir, name, '.bower.json')
                 )
             );
         }

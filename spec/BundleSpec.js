@@ -4,37 +4,23 @@ var Package = require('../src/Package');
 
 describe('Bundle', function () {
 
-    it('requires a bundle name', function () {
-        expect(Bundle.factory).toThrow();
-
-        expect(function () { return new Bundle.factory('named'); }).not.toThrow();
-    });
-
     it('contains any number of packages', function () {
-        var packages = ['jquery', 'angular'];
 
-        spyOn(Package, 'factory').and.returnValue({});
+        var bundle = new Bundle(['package1', 'package2']);
 
-        expect(Bundle.factory('test', packages).packages.length).toBe(2);
-
-        expect(Package.factory).toHaveBeenCalledWith('jquery', {});
-        expect(Package.factory).toHaveBeenCalledWith('angular', {});
+        expect(bundle.packages.length).toBe(2);
+        expect(bundle.packages[0]).toEqual(new Package('package1'));
+        expect(bundle.packages[1]).toEqual(new Package('package2'))
     });
 
     it('lists all the files required by its combined packages', function () {
 
-        var packageTwo   = new Package('two');
-        var packageOne   = new Package('one');
+        var bundle = new Bundle(['package1', 'package2']);
 
-        spyOn(packageOne, 'files').and.returnValue(['one.js']);
-        spyOn(packageTwo, 'files').and.returnValue(['three.js', 'three.css', 'one.js', 'two.js']);
+        spyOn(bundle.packages[0], 'files').and.returnValue(['file1.js']);
+        spyOn(bundle.packages[1], 'files').and.returnValue(['file2.js']);
 
-        var bundle = new Bundle('name', [
-            packageOne,
-            packageTwo,
-        ]);
-
-        expect(bundle.files()).toEqual(['one.js', 'three.js', 'three.css', 'two.js']);
+        expect(bundle.files()).toEqual(['file1.js', 'file2.js']);
     });
 
 });
