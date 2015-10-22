@@ -13,14 +13,34 @@ describe('Bundle', function () {
         expect(bundle.packages[1]).toEqual(new Package('package2'))
     });
 
-    it('lists all the files required by its combined packages', function () {
+    describe('files', function () {
 
-        var bundle = new Bundle(['package1', 'package2']);
+        var bundle;
 
-        spyOn(bundle.packages[0], 'files').and.returnValue(['file1.js']);
-        spyOn(bundle.packages[1], 'files').and.returnValue(['file2.js']);
+        beforeEach(function () {
+            bundle = new Bundle(['package1', 'package2', 'package3']);
 
-        expect(bundle.files()).toEqual(['file1.js', 'file2.js']);
+            spyOn(bundle.packages[0], 'files').and.returnValue(['file1.js', 'file2.css']);
+            spyOn(bundle.packages[1], 'files').and.returnValue(['file3.js', 'file4.png']);
+            spyOn(bundle.packages[2], 'files').and.returnValue(['file5.css']);
+        });
+
+
+        it('lists all the files required by its combined packages', function () {
+            expect(bundle.files()).toEqual(['file1.js', 'file2.css', 'file3.js', 'file4.png', 'file5.css']);
+        });
+
+        it('can filter to list only CSS files', function () {
+            expect(bundle.css()).toEqual(['file2.css', 'file5.css']);
+        });
+
+        it('can filter to list only JS files', function () {
+            expect(bundle.js()).toEqual(['file1.js', 'file3.js']);
+        });
+
+        it('can filter to list only non-JS and non-CSS files', function () {
+            expect(bundle.misc()).toEqual(['file4.png']);
+        });
     });
 
 });

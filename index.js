@@ -35,19 +35,33 @@ Package.configure(BOWER_JSON.overrides || {}, config.bower.folder);
 
 Elixir.extend('bower', function(packages, output) {
 
+    if (typeof output === 'undefined') output = {};
+
+    // `output` argument can be given as:
+    // 1. undefined
+    // 2. a string (= path to use for everything)
+    // 3. an object of paths { js, css, misc }
+    var outputFolders = {
+        js:   output.js || (typeof output === 'string' && output) || config.get('public.bower.outputFolder'),
+        css:  output.css || (typeof output === 'string' && output) || config.get('public.bower.outputFolder'),
+        misc: output.misc || (typeof output === 'string' && output) || config.get('public.bower.outputFolder')
+    };
+
     getBundlesForArgument(packages).forEach(function(bundle) {
 
         new Elixir.Task('bower', function() {
-            var paths = prepGulpPaths(bundle.files(), output, bundle.name);
+
+            var jsPaths   = prepGulpPaths(bundle.js(), outputFolders.js, bundle.name + '.js');
+            var cssPaths  = prepGulpPaths(bundle.css(), outputFolders.css, bundle.name + '.css');
+            var miscPaths = prepGulpPaths(bundle.misc(), outputFolders.misc);
 
             logMissingPackages(bundle);
-            this.log(paths.src, paths.output);
-
-            return merge(
-                bundleJs(paths),
-                bundleCss(paths),
-                bundleMisc(paths)
+            this.log(
+                prepGulpPaths(bundle.all(), '').src,
+                _.pluck([jsPaths, cssPaths, miscPaths], 'output.path').join(', ') // all output folders as csv list
             );
+
+            return merge(bundleJs(jsPaths), bundleCss(cssPaths), bundleMisc(miscPaths));
         });
     });
 });
@@ -57,13 +71,13 @@ Elixir.extend('bower', function(packages, output) {
  *
  * @param  {string|array} src
  * @param  {string}       optional output path
- * @param  {string}       optional bundle name
+ * @param  {string}       optional filename name
  * @return {object}
  */
-var prepGulpPaths = function(src, output, bundleName) {
+var prepGulpPaths = function(src, output, filename) {
     return new Elixir.GulpPaths()
         .src(src, config.bower.folder)
-        .output(output || config.get('public.bower.outputFolder') || 'public/bundles', bundleName + '.*');
+        .output(output, filename);
 };
 
 /**
@@ -76,7 +90,6 @@ var bundleJs = function(paths) {
     return (
         gulp
         .src(paths.src.path)
-        .pipe(filter('*.js'))
         .pipe($.if(config.sourcemaps, $.sourcemaps.init({ loadMaps: true })))
         .pipe($.concat(paths.changeExtension(paths.output.name, '.js')))
         .pipe($.if(config.production, $.uglify()))
@@ -95,7 +108,6 @@ var bundleCss = function(paths) {
     return (
         gulp
         .src(paths.src.path)
-        .pipe(filter('*.css'))
         .pipe(rework(
             reworkUrl(function (url) {
                 return /^(https?:)?\/\//.test(url) ? url : path.basename(url);
@@ -119,7 +131,6 @@ var bundleMisc = function(paths) {
     return (
         gulp
         .src(paths.src.path)
-        .pipe(filter(['*', '!*.css', '!*.js']))
         .pipe(gulp.dest(paths.output.baseDir))
     );
 };
@@ -163,6 +174,11 @@ function getBundlesForArgument(arg)
     });
 }
 
+/**
+ * Log to console any packages that were requested but not installed.
+ *
+ * @param  {Bundle} bundle
+ */
 function logMissingPackages(bundle)
 {
     var missing = _(bundle.packages).reject('installed')
