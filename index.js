@@ -196,3 +196,11 @@ function logMissingPackages(bundle)
     console.log('   Try running ' + colors.cyan('bower install ' + missing.join(' ')));
     console.log('');
 }
+
+/**
+ * Export a bundle factory function
+ */
+module.exports = function (bundles, output)
+{
+    return new Bundle(bundles, output);
+};
