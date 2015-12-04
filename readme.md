@@ -113,3 +113,9 @@ gulp.task('customBowerTask', function () {
               // ...
 });
 ```
+
+## Contributing
+All contributions welcome.
+
+## License
+MIT
