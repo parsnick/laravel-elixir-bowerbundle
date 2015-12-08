@@ -7,11 +7,12 @@ module.exports = (function () {
 
     /**
      * Constructor for Package
+     *
      * @param {string} name
      */
     function Package(name)
     {
-        var dotBowerJson = readBowerJson(name) || {};
+        var dotBowerJson = Package._readBowerJson(name) || {};
         var overrides = globalOverrides[name] || {};
 
         this.name         = name;
@@ -64,9 +65,10 @@ module.exports = (function () {
 
     /**
      * Get all files in this package.
+     *
      * @return {array}
      */
-    Package.prototype.files = function()
+    Package.prototype.files = function ()
     {
         if (typeof this.main === 'string') {
             this.main = [this.main];
@@ -77,14 +79,13 @@ module.exports = (function () {
         }, this);
     };
 
-    return Package;
-
     /**
      * Reads the bower.json config file for the named package.
+     *
      * @param  {string} name
      * @return {object} parsed JSON
      */
-    function readBowerJson(name)
+    Package._readBowerJson = function (name)
     {
         try {
             return JSON.parse(
@@ -97,5 +98,7 @@ module.exports = (function () {
             return {};
         }
     }
+
+    return Package;
 
 })();

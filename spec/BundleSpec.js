@@ -1,6 +1,6 @@
 
-var Bundle = require('../src/Bundle');
-var Package = require('../src/Package');
+var Bundle = require('./../src/Bundle');
+var Package = require('./../src/Package');
 
 describe('Bundle', function () {
 

@@ -1,5 +1,5 @@
 
-var Package = require('../src/Package');
+var Package = require('./../src/Package');
 var fs = require('fs');
 
 describe('Package', function () {
@@ -15,7 +15,7 @@ describe('Package', function () {
 
     it('returns an array of its main files as relative paths from bower_components directory', function () {
 
-        spyOn(fs, 'readFileSync').and.returnValue('{"main":"dist/main.js"}');
+        spyOn(Package, '_readBowerJson').and.returnValue({ "main": "dist/main.js" });
 
         expect(new Package('test').files()).toEqual([
             'test/dist/main.js'
@@ -29,11 +29,11 @@ describe('Package', function () {
                 "jquery": "~2.0"
             }
         };
-        spyOn(fs, 'readFileSync').and.returnValue(JSON.stringify(bowerJsonContent));
+
+        spyOn(Package, '_readBowerJson').and.returnValue(bowerJsonContent);
 
         var myPackage = new Package('example');
 
-        expect(fs.readFileSync).toHaveBeenCalledWith('vendor/bower_components/example/.bower.json');
         expect(myPackage.main).toEqual(bowerJsonContent.main);
         expect(myPackage.dependencies).toEqual(bowerJsonContent.dependencies);
     });
