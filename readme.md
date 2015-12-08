@@ -1,4 +1,4 @@
-# laravel-elixir-bowerbundle [![Dependencies Status](https://david-dm.org/parsnick/laravel-elixir-bowerbundle.svg)](https://david-dm.org/parsnick/laravel-elixir-bowerbundle) [![Build Status](https://travis-ci.org/parsnick/laravel-elixir-bowerbundle.svg?branch=master)](https://travis-ci.org/parsnick/laravel-elixir-bowerbundle)
+# laravel-elixir-bowerbundle [![Dependencies Status](https://david-dm.org/parsnick/laravel-elixir-bowerbundle.svg)](https://david-dm.org/parsnick/laravel-elixir-bowerbundle) [![Build Status](https://travis-ci.org/parsnick/laravel-elixir-bowerbundle.svg?branch=master)](https://travis-ci.org/parsnick/laravel-elixir-bowerbundle) [![Coverage Status](https://coveralls.io/repos/parsnick/laravel-elixir-bowerbundle/badge.svg?branch=master&service=github)](https://coveralls.io/github/parsnick/laravel-elixir-bowerbundle?branch=master)
 
 Concatenates and publishes [Bower](https://bower.io) dependencies as configurable bundles of .css and .js files.
 
