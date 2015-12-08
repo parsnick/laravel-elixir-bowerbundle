@@ -22,7 +22,8 @@
   },
   "devDependencies": {
     "gulp": "*",
-    "better-console": "^0.2.4",
+    "gulp-coverage": "^0.3.38",
+    "gulp-coveralls": "^0.1.4",
     "gulp-jasmine": "^2.0.1"
   },
   "peerDependencies": {

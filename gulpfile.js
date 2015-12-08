@@ -1,13 +1,25 @@
 var gulp    = require('gulp');
 var jasmine = require('gulp-jasmine');
-var console = require('better-console');
+var cover   = require('gulp-coverage');
+var coveralls = require('gulp-coveralls');
 var gutil   = require('gulp-util');
 
 gulp.task('test', function () {
-    console.clear();
-    gulp.src(__dirname + '/spec/**/*Spec.js')
-        .pipe(jasmine( { includeStackTrace: true }))
-        .on('error', gutil.log);
+    gulp.src('spec/**/*Spec.js')
+        .pipe(jasmine()).on('error', gutil.log);
+});
+
+gulp.task('test:coverage', function () {
+    gulp.src('spec/**/*Spec.js')
+        .pipe(cover.instrument({
+            pattern: ['src/**/*.js']
+        }))
+        .pipe(jasmine()).on('error', gutil.log)
+        .pipe(cover.gather())
+        .pipe(cover.format([
+            { reporter: 'lcov' }
+        ]))
+        .pipe(coveralls());
 });
 
 gulp.task('tdd', function () {
