@@ -47,7 +47,7 @@ module.exports = (function () {
                 return package.files();
             })
             .flatten()
-            .unique()
+            .uniq()
             .value();
     };
 

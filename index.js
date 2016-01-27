@@ -58,7 +58,7 @@ Elixir.extend('bower', function(packages, output) {
             logMissingPackages(bundle);
             this.log(
                 prepGulpPaths(bundle.all(), '').src,
-                _.pluck([jsPaths, cssPaths, miscPaths], 'output.path').join(', ') // all output folders as csv list
+                _.map([jsPaths, cssPaths, miscPaths], 'output.path').join(', ') // all output folders as csv list
             );
 
             return merge(bundleJs(jsPaths), bundleCss(cssPaths), bundleMisc(miscPaths));
@@ -115,7 +115,7 @@ var bundleCss = function(paths) {
         ))
         .pipe($.if(config.sourcemaps, $.sourcemaps.init({ loadMaps: true })))
         .pipe($.concat(paths.changeExtension(paths.output.name, '.css')))
-        .pipe($.if(config.production, $.minifyCss()))
+        .pipe($.if(config.production, $.cssnano(config.css.cssnano.pluginOptions)))
         .pipe($.if(config.sourcemaps, $.sourcemaps.write('.')))
         .pipe(gulp.dest(paths.output.baseDir))
     );
@@ -182,7 +182,7 @@ function getBundlesForArgument(arg)
 function logMissingPackages(bundle)
 {
     var missing = _(bundle.packages).reject('installed')
-        .pluck('name').unique().value();
+        .map('name').uniq().value();
 
     if ( ! missing.length) return;
 
