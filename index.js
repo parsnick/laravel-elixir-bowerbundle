@@ -110,7 +110,7 @@ var bundleCss = function(paths) {
         .src(paths.src.path)
         .pipe(rework(
             reworkUrl(function (url) {
-                return /^(https?:)?\/\//.test(url) ? url : path.basename(url);
+                return isRelative(url) ? path.basename(url) : url;
             })
         ))
         .pipe($.if(config.sourcemaps, $.sourcemaps.init({ loadMaps: true })))
@@ -195,6 +195,17 @@ function logMissingPackages(bundle)
     });
     console.log('   Try running ' + colors.cyan('bower install ' + missing.join(' ')));
     console.log('');
+}
+
+/**
+ * Test if the given URL is relative and needs rebasing.
+ *
+ * @param {string} url
+ * @return {boolean}
+ */
+function isRelative(url)
+{
+    return ! /^(https?:)?\/\//.test(url) && url.indexOf('data:') !== 0;
 }
 
 /**

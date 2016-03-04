@@ -1,6 +1,6 @@
 {
   "name": "laravel-elixir-bowerbundle",
-  "version": "2.1.2",
+  "version": "2.1.3",
   "description": "Concatenates bower dependencies into configurable bundles of .css and .js files",
   "main": "index.js",
   "keywords": [
@@ -27,7 +27,7 @@
     "gulp-jasmine": "^2.0.1"
   },
   "peerDependencies": {
-    "laravel-elixir": "^4.2.0"
+    "laravel-elixir": ">4.2.0"
   },
   "scripts": {
     "test": "gulp test"
