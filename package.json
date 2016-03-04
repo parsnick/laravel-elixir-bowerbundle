@@ -13,7 +13,7 @@
   "author": "Nick <nick.dev@mailingaddress.org>",
   "license": "MIT",
   "dependencies": {
-    "gulp-filter": "^3.0.1",
+    "gulp-filter": "^4.0.0",
     "gulp-rework": "^1.1.0",
     "gulp-util": "^3.0.6",
     "lodash": "^4.0.1",
