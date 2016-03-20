@@ -169,9 +169,20 @@ function getBundlesForArgument(arg)
     }
 
     // handles mix.bower(), which uses all bundle definitions in bower.json
-    return _.map(BOWER_JSON.bundles || [], function (packages, name) {
-        return new Bundle(packages, name);
-    });
+    if (BOWER_JSON.bundles && BOWER_JSON.bundles.length) {
+        return _.map(BOWER_JSON.bundles || [], function (packages, name) {
+            return new Bundle(packages, name);
+        });
+    }
+
+    // handles mix.bower() when no "bundles" property, uses all from the
+    // "dependencies" property as fallback
+    if (BOWER_JSON.dependencies) {
+        var packages = Object.keys(BOWER_JSON.dependencies);
+        return [ new Bundle(packages) ];
+    }
+
+    return [];
 }
 
 /**
